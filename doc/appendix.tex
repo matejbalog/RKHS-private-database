@@ -1,0 +1,630 @@
+\section*{APPENDIX: Differentially Private Database Release via Kernel Mean Embeddings}
+
+
+
+\section{Proofs}
+\label{sec:app:proofs}
+
+Here we provide proofs for the results stated in the main text, together with additional supporting lemmas required for these proofs.
+
+
+\subsection{Algorithm 1 (Synthetic Data Subspace): Consistency}
+\label{app:sec:synthetic_subspace_consistency}
+
+Before proving Theorem 2, we obtain a Lemma showing that the ``projection error" incurred due to projecting the KME $\hat{\mu}_X$ onto the finite-dimensional subspace $\calH_M$ spanned by the synthetic data points, quantified by the RKHS distance between $\hat{\mu}_X$ and the projection $\overline{\mu}_X$, converges to $0$ as $N \to \infty$:
+
+\begin{lemma}
+	\label{lem:projection_consistency}
+	Let $\calX$ be a compact metric space and $k : \calX \times \calX \to \IR$ a continuous kernel on $\calX$. Suppose that the synthetic data points $z_1, z_2, \ldots$ are sampled i.i.d.~from a probability distribution $q$ on $\calX$. If the support $\supp(X)$ of $X$ is included in the support of $q$, then
+	\begin{equation}
+	\left\| \overline{\mu}_X - \hat{\mu}_X \right\|_{\calH}
+	\stackrel{\IP}{\to}
+	0
+	\text{ as }
+	N \to \infty
+	.
+	\end{equation}
+	\begin{proof}
+		Let $\varepsilon > 0$. As $k$ is continuous on $\calX \times \calX$, which as a product of compact spaces is itself compact by Tychonoff's theorem, the kernel $k$ is uniformly continuous and in particular there exists $\delta > 0$ such that for all $x, x' \in \calX$ we have $| k(x, x) - k(x, x') | < \varepsilon^2 / 2$ whenever $\| x - x' \|_{\calX} < \delta$. As $\calX$ is compact, it is totally bounded, and thus so is its subset $\supp(X)$. Therefore $\supp(X)$ can be covered with finitely many open balls $B_1, \ldots, B_{K}$ of radius $\delta / 2$. Let the sequence $z_1, z_2, \ldots$ be sampled i.i.d.~from $q$, and let $E_M$ be the event that at least ones of these $K$ balls contains no element of $z_1, \ldots, z_M$. Since $\supp(X) \subseteq \supp(q)$ by assumption, we have $q(B_k) > 0$ for all $k = 1, \ldots, K$ and therefore $\IP[ E_M ] \to 0$ as $M \to \infty$.
+		
+		Note that if all $K$ balls contain an element of $z_1, \ldots, z_M$ (i.e., $E_M^C$ holds), then for each $x \in \supp(X)$ one can find $1 \leq m(x) \leq M$ such that $\| x - z_{m(x)} \| < \delta/2 + \delta/2 = \delta$. In that case
+		\begin{align}
+		\left\| \overline{\mu}_X - \hat{\mu}_X \right\|_{\calH}
+		&=
+		\inf_{h \in \calH_M} \left\| h - \hat{\mu}_X \right\|_{\calH}
+		& \text{[property of projection]}\nonumber
+		\\&\leq
+		\left\| \frac{1}{N} \sum_{n = 1}^N k(z_{m(x_n)}, \cdot) - \hat{\mu}_X \right\|_{\calH}
+		& \text{[as $\textstyle\frac{1}{N} \textstyle\sum_{n = 1}^N k(z_{m(x_n)}, \cdot) \in \calH_M$]}\nonumber
+		\\&\leq
+		\frac{1}{N} \sum_{n = 1}^N \left\| k(z_{m(x_n)}, \cdot) - k(x_n, \cdot) \right\|_{\calH}
+		& \text{[Triangle inequality]}\nonumber
+		\\&<
+		\frac{1}{N} \sum_{n = 1}^N \varepsilon
+		& \text{[see below]}\nonumber
+		\\&=
+		\varepsilon
+		,
+		\end{align}
+		where we have used the reproducing property, the Triangle inequality and our choices of $\delta$ and $z_{m(x_n)}$ to see that for all $1 \leq n \leq N$,
+		\begin{align}
+		\left\| k(z_{m(x_n)}, \cdot) - k(x_n, \cdot) \right\|_{\calH}
+		&=
+		\langle k(z_{m(x_n), \cdot} - k(x_n, \cdot), k(z_{m(x_n), \cdot} - k(x_n, \cdot) \rangle_{\calH}^{1/2}
+		\\&=
+		\Big( k(z_{m(x_n)}, z_{m(x_n)})
+		- 2 k(z_{m(x_n)}, x_n)
+		+ k(x_n, x_n) \Big)^{1/2}
+		\\&\leq
+		\big( | k(z_{m(x_n)}, z_{m(x_n)}) - k(z_{m(x_n)}, x_n) |
+		+ | k(x_n, x_n) - k(z_{m(x_n)}, x_n) | \big)^{1/2}
+		\\&<
+		\left( \frac{\varepsilon^2}{2} + \frac{\varepsilon^2}{2} \right)^{1/2}
+		= \varepsilon
+		.
+		\end{align}
+
+		Hence we have that $\IP\left[
+		\left\| \overline{\mu}_X - \hat{\mu}_X \right\|_{\calH}
+		> \varepsilon
+		\right]
+		\leq \IP[ E_M ]
+		\to 0
+		\text{ as }
+		M \to \infty$. But since $\varepsilon > 0$ was arbitrary and $M \to \infty$ as $N \to \infty$ by construction, the claimed convergence in probability result follows from definition.
+	\end{proof}
+\end{lemma}
+
+
+\begin{hthm}[\ref{thm:synthetic_subspace_consistency}.]
+	\label{app:thm:synthetic_data_consistency}
+	Let $\calX$ be a compact metric space and $k : \calX \times \calX \to \IR$ a continuous kernel on $\calX$. Suppose that the synthetic data points $z_1, z_2, \ldots$ are sampled i.i.d.~from a probability distribution $q$ on $\calX$. If the support of $X$ is included in the support of $q$, then Algorithm~\ref{alg:synthetic_subspace} outputs a consistent estimator of the kernel mean embedding $\mu_X$ in the sense that
+	\begin{equation}
+	\sum_{m = 1}^M w_m k(z_m, \cdot)
+	\stackrel{\IP}{\to}
+	\mu_X
+	\hspace{2em} \text{as } N \to \infty
+	.
+	\end{equation}
+	\begin{proof}
+		Using the Triangle inequality, we can upper bound the RKHS distance between the output $\tilde{\mu}_X$ of Algorithm~\ref{alg:synthetic_subspace} and the true kernel mean embedding $\mu_X$ as follows:
+		\begin{equation}
+		\left\| \tilde{\mu}_X - \mu_X \right\|_{\calH}
+		\leq
+		\underbrace{
+			\left\| \tilde{\mu}_X - \overline{\mu}_X \right\|_{\calH}
+		}_{\text{privacy error}}
+		+
+		\underbrace{
+			\left\| \overline{\mu}_X - \hat{\mu}_X \right\|_{\calH}
+		}_{\text{projection error}}
+		+
+		\underbrace{
+			\left\| \hat{\mu}_X - \mu_X \right\|_{\calH}
+		}_{\text{finite sample error}}
+		.
+		\label{eq:synthetic_subspace_consistency:triangle_bound}
+		\end{equation}
+		The finite sample error tends to $0$ as $N \to \infty$ by the law of large numbers, while the projection error tends to $0$ as $N \to \infty$ by Lemma~\ref{lem:projection_consistency}. For the privacy error, using orthonormality of the basis $
+		\{ b_1, \ldots, b_F \}$ we have
+		\begin{equation}
+		\left\| \tilde{\mu}_X - \overline{\mu}_X \right\|_{\calH}^2
+		=
+		\left\| \sum_{f = 1}^F (\beta_f - \alpha_f) b_f \right\|_{\calH}^2
+		=
+		\sum_{f = 1}^F (\beta_f - \alpha_f)^2
+		=
+		\frac{8 \ln(1.25 / \delta)}{N^2 \varepsilon^2} F \frac{1}{F} \sum_{f = 1}^F \calN(0, 1)^2
+		.
+		\end{equation}
+		As a function of $N$, the size of the basis $F \in \IN$ is a non-decreasing function, so it either converges to some $L \in \IN$, in which case the obtained expression clearly tends to $0$ as $N \to \infty$ with probability $1$, or $F \to \infty$ as $N \to \infty$. In this latter case $\frac{1}{F} \sum_{f = 1}^F \calN(0, 1)^2 \to 1$ as $N \to \infty$ a.s.~by the strong law of large numbers, and $F / N^2 \to 0$ as $N \to \infty$ since $F \leq M = o(N^2)$. Hence the privacy error goes to $0$ as $N \to \infty$ either way, as required to complete the proof.
+	\end{proof}
+\end{hthm}
+
+
+\begin{theorem}
+	\label{thm:synthetic_subspace_regularization_consistency}
+	Suppose that the kernel $k$ is $c_0$-universal~\cite{sriperumbudur_universality_2011} and $f$ is any continuous function mapping from $\calX$ to some space $\mathcal{Y}$. Let $C \geq 1$ be any finite constant. If line
+	7
+	%~\ref{alg:synthetic_subspace:reexpress}
+	of Algorithm~\ref{alg:synthetic_subspace} is replaced with a regularised reduced set method solving the constrained minimisation problem
+	\begin{equation}
+	\mathbf{w}
+	=
+	\argmin_{\mathbf{u}: \| \mathbf{u} \|_1 \leq C}
+	\left\|
+	\tilde{\mu}_X
+	-
+	\sum_{m = 1}^M u_m k(z_m, \cdot)
+	\right\|_{\calH}
+	,
+	\label{eq:synthetic_subspace_regularized_minimization}
+	\end{equation}
+	then the points output by Algorithm~\ref{alg:synthetic_subspace} yield a consistent estimator of the kernel mean embedding $\IE[k(f(X), \cdot)]$ of $f(X)$ in the sense that
+	\begin{equation}
+	\sum_{m = 1}^M w_m k(f(z_m), \cdot)
+	\stackrel{\IP}{\to}
+	\mu_{f(X)}
+	\hspace{2em} \text{as } N \to \infty
+	.
+	\end{equation}
+	\begin{proof}
+		Let ${\mu}_X^{\text{out}} := \sum_{m = 1}^M w_m k(z_m, \cdot)$ be the RKHS element output by Algorithm~\ref{alg:synthetic_subspace} after adding the stated regularisation. First we show that despite the regularisation, ${\mu}_X^{\text{out}}$ remains a consistent estimator of the true kernel mean embedding $\mu_X$ as $N \to \infty$.
+		
+		The modification introduces an additional regularisation error term $\| {\mu}_X^{\text{out}} - \tilde{\mu}_X \|_{\calH}$ into the upper bound on $\| {\mu}_X^{\text{out}} - \mu_X \|$, compared to the corresponding bound (\ref{eq:synthetic_subspace_consistency:triangle_bound}) in the proof of Theorem~\ref{thm:synthetic_subspace_consistency}. So to show the first desired consistency result, it remains to show that this extra regularisation error term converges to $0$ in probability as $N \to \infty$. To this end, let $\varepsilon > 0$ be arbitrary. Define $\delta > 0$, the sequence $z_1, z_2, \ldots$ and $m(x)$ for $x \in \calX$ as in the proof of Lemma~\ref{lem:projection_consistency}. Note that the RKHS element $\frac{1}{N} \sum_{n = 1}^N k(z_{m(x_n)}, \cdot)$ is in the feasible set of the regularised minimisation problem (\ref{eq:synthetic_subspace_regularized_minimization}), because the sum of absolute values of expansions coefficients is
+		\begin{equation}
+		\sum_{m = 1}^M \sum_{n : m(x_n) = n} \frac{1}{M}
+		=
+		\sum_{n = 1}^N \frac{1}{N}
+		=
+		1
+		\leq C
+		\end{equation}
+		Therefore the regularisation error can be upper bounded as
+		\begin{align}
+		\| {\mu}_X^{\text{out}} - \tilde{\mu}_X \|_{\calH}
+		&\leq
+		\left\|
+		\frac{1}{N} \sum_{n = 1}^N k(z_{m(x_n)}, \cdot) - \tilde{\mu}_X
+		\right\|_{\calH}
+		& \text{[property of min]}\nonumber
+		\\ &\leq
+		\left\|
+		\tilde{\mu}_X - \hat{\mu}_X
+		\right\|_{\calH}
+		+
+		\left\|
+		\hat{\mu}_X - \frac{1}{N} \sum_{n = 1}^N k(z_{m(x_n)}, \cdot)
+		\right\|_{\calH}
+		& \text{[Triangle inequality]}\nonumber
+		\end{align}
+		The first term goes to $0$ as $N \to \infty$ by the argument given in the proof of Theorem~\ref{thm:synthetic_subspace_consistency}. The probability that the second term is larger than $\varepsilon$ converges to $0$ as $N \to \infty$ using the argument given in the proof of Lemma~\ref{lem:projection_consistency}. Hence we have the desired convergence of the modified Algorithm~\ref{alg:synthetic_subspace}'s output ${\mu}_X^{\text{out}}$ to the true kernel mean embedding $\mu_X$ as $N \to \infty$, in probability.
+		
+		This means that the modified algorithm still outputs a consistent estimator of the kernel mean embedding of $\mu_X$. Moreover, the weights in the released finite expansion now have their $L_1$ norm $\sum_{m = 1}^M |w_m|$ bounded by the constant $C$ by construction, so Theorem 1 of~\cite{scibior_consistent_2016} applies and gives the desired conclusion regarding consistency of the estimator for the kernel mean embedding $\mu_{f(X)}$ of $f(X)$.
+	\end{proof}
+\end{theorem}
+
+
+
+\subsection{Algorithm 1 (Synthetic Data Subspace): Convergence Rates}
+\label{app:sec:synthetic_subspace_convergence_rates}
+
+Towards proving the convergence rate of Proposition~\ref{prop:alg1_rate_no_publishable_subset}, we will make use of the following Lemma~\ref{lem:projection_convergence_rate}, which is a refinement of the corresponding consistency result of Lemma~\ref{lem:projection_consistency} above. It uses the Lipschitz assumption on the kernel to establish a quantitative dependence between $\varepsilon$ and $\delta$, and the condition on $q$ to establish a dependence between $\delta$, $K$ and $\IP[E_M]$.
+
+\begin{lemma}
+\label{lem:projection_convergence_rate}
+Suppose that $\calX$ is a bounded subset of $\IR^D$, the kernel $k$ is Lipschitz with some Lipschitz constant $L \in \IR^{+}$, and the synthetic data points $z_1, z_2, \ldots$ are sampled i.i.d.~from a distribution $q$ whose density is bounded away from $0$ on any bounded subset of $\IR^D$. Then
+\begin{equation*}
+\forall{\gamma \in (0, 1), a > 0}
+\hspace{1.5em}
+\exists{C \in \IR, \varepsilon_0 > 0}
+\hspace{1.5em}
+\forall{\varepsilon \in (0, \varepsilon_0)}
+\hspace{1.5em}
+M \geq C \varepsilon^{-2D-a}
+\hspace{0.75em} \Rightarrow \hspace{0.75em}
+\IP\left[ \| \hat{\mu}_X - \bar{\mu}_X \|_{\calH} \geq \varepsilon \right]
+\leq
+\gamma
+.
+\end{equation*}
+\begin{proof}
+% FOR ALL gamma and a
+Let $\gamma \in (0, 1)$ and $a > 0$.
+% EXISTS C and epsilon_0
+Suppose for the moment that $C$ and $\varepsilon_0$ have already been chosen based on $\calX, q, \gamma, a$ and based on the Lipschitz constant $L$ of the kernel $k$. Let $\varepsilon \in (0, \varepsilon_0)$ and suppose that $M \geq C \varepsilon^{-2D-a}$.
+
+Define $\delta = \frac{\varepsilon^2}{2L}$ and let $B_1, \ldots, B_K$ be a covering of $\supp(X)$ with $K$ open balls of radii $\frac{\delta}{2}$. By the Lipschitz property
+\begin{equation*}
+\| x - x' \|_{\calX} < \delta
+\hspace{0.75em}\Rightarrow\hspace{0.75em}
+|k(x, x') - k(x, x)|
+\leq L \| x - x' \|_{\calX}
+< L \delta
+= \frac{\varepsilon^2}{2}
+\end{equation*}
+and so by the argument appearing in the proof of Lemma~\ref{lem:projection_consistency}, if each ball $B_k$ contains at least one synthetic data point $z_m$, then $\| \hat{\mu}_X - \bar{\mu}_X \|_{\calH} < \varepsilon$. Therefore it suffices to show that if $M \geq C \varepsilon^{-2D(1+a)}$, then the probability of some of the balls not containing any synthetic data point is at most $\gamma$.
+
+To this end, let us look at the number of balls $K$, and the probability that a synthetic data point lands in a particular ball, as functions of $\varepsilon$ (via the ball radius $\frac{\delta}{2}$). First, since $\calX$ is a bounded subset of $\IR^D$, there exists $C_1 \in \IR$ such that for all $\delta > 0$, the space $\calX$ can be covered with $\lfloor C_1 \delta^{-D} \rfloor$ open balls of radii $\delta / 2$. Second, since the density of $q$ is assumed to be bounded away from $0$ on any bounded subset of $\IR^D$, there exists $C_2 \in \IR$ such that $q(B_k) \geq C_2 \delta^D$ for all $k$.
+
+Let $A_k^M$ be the event that the ball $B_k$ remains without a synthetic data point after $M$ of them have been sampled. Then the probability of the event $E_M$ that \emph{any} of the $K$ balls remains empty can be upper bounded by a union bound as
+\begin{equation*}
+\IP[ E_M ]
+\leq \sum_{k = 1}^K \IP[ A_k^M ]
+= \sum_{k = 1}^K (1 - q(B_k))^M
+\leq \sum_{k = 1}^K (1 - C_2 \delta^D)^M
+\leq K \exp\left( - M C_2 \delta^D \right)
+\leq C_1 \delta^{-D} \exp\left( - M C_2 \delta^D \right)
+.
+\end{equation*}
+Solving for $M$, we can easily verify that $\IP[E_M] \leq \gamma$ is ensured whenever
+\begin{equation*}
+M
+\geq
+\frac{1}{C_2 \delta^D} \left( D \ln \frac{1}{\delta} + \ln \frac{C_1}{\gamma} \right)
+=
+\frac{(2L)^D}{C_2} \frac{1}{\varepsilon^{2D}} \left( 2 \ln \frac{1}{\varepsilon} + \ln \frac{C_1 (2L)^D}{\gamma} \right)
+\end{equation*}
+Since $\ln \frac{1}{\varepsilon} < \frac{1}{\varepsilon^a}$ for all sufficiently small $\varepsilon$, we see that we could have chosen $\varepsilon_0 > 0$ and $C \in \IR$ such that the right-hand side is at most $C \varepsilon^{-2D-a}$ for all $\varepsilon \in (0, \varepsilon_0)$. But the condition $M \geq C \varepsilon^{-2D-a}$ is satisfied by supposition, and so we conclude that $\IP\left[ \| \hat{\mu}_X - \bar{\mu}_X \|_{\calH} \right] \leq \IP[E_M] \leq \gamma$.
+\end{proof}
+\end{lemma}
+
+
+\begin{hprop}[\ref{prop:alg1_rate_no_publishable_subset}]
+Suppose that $\calX$ is a bounded subset of $\IR^D$, the kernel $k$ is Lipschitz, and the synthetic data points $z_1, z_2, \ldots$ are sampled i.i.d.~from a distribution $q$ whose density is bounded away from $0$ on any bounded subset of $\IR^D$. Then $M(N)$ can be chosen so that Algorithm~\ref{alg:synthetic_subspace} outputs an estimator that converges to the true kernel mean embedding $\mu_X$ in RKHS norm at a rate $\calO_p(N^{-1/(D+1+c)})$, where $c$ is any fixed positive number $c > 0$.
+\begin{proof}
+As in the proof of Theorem~\ref{thm:synthetic_subspace_consistency}, we can decompose the error between the released element $\tilde{\mu}_X$ and the true $\mu_X$ as
+\begin{equation}
+	\left\| \tilde{\mu}_X - \mu_X \right\|_{\calH}
+	\leq
+	\underbrace{
+		\left\| \hat{\mu}_X - \mu_X \right\|_{\calH}
+	}_{\text{finite sample error}}
+	+
+	\underbrace{
+		\left\| \overline{\mu}_X - \hat{\mu}_X \right\|_{\calH}
+	}_{\text{projection error}}
+	+
+	\underbrace{
+		\left\| \tilde{\mu}_X - \overline{\mu}_X \right\|_{\calH}
+	}_{\text{privacy error}}
+	.
+\label{app:eq:error_decomposition}
+\end{equation}
+Using the standard empirical kernel mean embedding estimator, the finite sample error vanishes as $\calO_p(N^{-1/2})$~\citep{muandet_kernel_2016}.
+From the proof of Theorem~\ref{thm:synthetic_subspace_consistency} we can see that the privacy error vanishes as $\calO_p(\sqrt{F} / N) \subseteq \calO_p(\sqrt{M} / N)$.
+Solving for $\varepsilon$ in the statement of the preceding Lemma~\ref{lem:projection_convergence_rate} we have that for all $\gamma \in (0, 1)$, $a > 0$ and all sufficiently large $M$,
+\begin{equation*}
+\IP\left[ \| \hat{\mu}_X - \bar{\mu}_X \|_{\calH}
+\geq
+\frac{1}{C} M^{- \frac{1}{2D+a}} \right]
+\leq
+\gamma.
+\end{equation*}
+The projection error thus vanishes at a rate $\calO_p(M^{-1/(2D+a)})$, for any arbitrarily small $a > 0$. To achieve the claimed total rate $\calO_p(N^{-1/(D+1+c)})$ we choose $M(N) = N^k$ with $k = 1 - 4 / (2D + a + 2)$, and verify that
+\begin{equation*}
+\calO_p\left(
+\frac{1}{\sqrt{N}}
++
+M^{\frac{-1}{2D+a}}
++
+\frac{\sqrt{M}}{N}
+\right)
+=
+\calO_p\left(
+\frac{1}{\sqrt{N}}
++
+N^{\frac{-k}{2D+a}}
++
+\frac{\sqrt{N^k}}{N}
+\right)
+=
+\calO_p\left(
+\frac{1}{\sqrt{N}}
++
+N^{-\frac{1}{D+1+a/2}}
+\right)
+=
+\calO_p\left(
+N^{-\frac{1}{D+1+a/2}}
+\right)
+\end{equation*}
+and the claimed result follows by taking $a = 2c > 0$.
+\end{proof}
+\end{hprop}
+
+
+\begin{hprop}[\ref{prop:alg1_rate_publishable_subset}]
+Suppose that a fixed proportion $\eta$ of the private database can be published without modification. Using this part of the database as the synthetic data points, Algorithm~\ref{alg:synthetic_subspace} outputs a consistent estimator of $\mu_X$ that converges in RKHS norm at a rate $\calO_p(N^{-1/2})$.
+\begin{proof}
+Let $\hat{\mu}^{\text{baseline}} := \frac{1}{M} \sum_{m = 1}^M k(z_m, \cdot)$ be the baseline estimator that weights the $M$ public points uniformly. Noting that $\hat{\mu}^{\text{baseline}} \in \calH_M$ lies in the span of feature maps of synthetic data points, for the projection error as defined in equation (\ref{app:eq:error_decomposition}) we have:
+\begin{align*}
+\left\| \overline{\mu}_X - \hat{\mu}_X \right\|_{\calH}
+&=
+\left\| \hat{\mu}^{\text{baseline}} - \hat{\mu}_X \right\|_{\calH}
+&\text{[ property of projection ]}
+\\&=
+\left\| \hat{\mu}^{\text{baseline}} - \mu_X \right\|_{\calH}
++
+\left\| \hat{\mu}_X - \mu_X \right\|_{\calH}
+&\text{[ Triangle inequality ]}
+\\&\in
+\calO_p\left( M^{-1/2} \right) + \calO_p\left( N^{-1/2} \right)
+\end{align*}
+Using the error decomposition of equation (\ref{app:eq:error_decomposition}) we thus have
+\begin{equation*}
+\left\| \tilde{\mu}_X - \mu_X \right\|_{\calH}
+\in
+\calO_p\left(
+N^{-1/2} + (M^{-1/2} + N^{-1/2}) + \sqrt{M} / N
+\right)
+\end{equation*}
+and this is in $\calO_p(N^{-1/2})$ when $M = \eta N$ is proportional to $N$.
+\end{proof}
+\end{hprop}
+
+
+
+\subsection{Algorithm 1 (Synthetic Data Subspace): Differential Privacy}
+\label{app:sec:synthetic_subspace_privacy}
+
+The proof of Proposition~\ref{prop:synthetic_subspace_privacy} rests on the following simple calculation:
+
+\begin{lemma}
+	\label{lem:KME_RKHS_sensitivity}
+	If $k(x, x) \leq 1$ for all $x \in \calX$, then the RKHS norm sensitivity of the empirical kernel mean embedding $\hat{\mu}_X$ with respect to changing one data point is at most $\frac{2}{N}$.
+	\begin{proof}
+		Let $D = \{ x_1, \ldots ,x_N \}$ and $D' = \{ x'_1, \ldots, x'_N \}$ be two databases of the same cardinality $N$, differing in a single row. Without loss of generality $x_n = x'_n$ for $1 \leq n \leq N - 1$. Let $\hat{\mu}_X$ and $\hat{\mu}_X'$ be the empirical kernel mean embeddings computed using $D$ and $D'$, respectively. Then
+		\begin{align}
+		\left\| \hat{\mu}_X - \hat{\mu}_X' \right\|_{\calH}
+		&=
+		\left\| \frac{1}{N} \sum_{n = 1}^N k(x_n, \cdot) - \frac{1}{N} \sum_{n = 1}^N k(x'_n, \cdot) \right\|_{\calH}
+		=
+		\frac{1}{N} \left\| k(x_N, \cdot) - k(x'_N, \cdot) \right\|_{\calH}
+		\\&\leq
+		\frac{1}{N} \left(
+		\left\| k(x_N, \cdot) \right\|_{\calH} + \left\| k(x_N, \cdot) \right\|_{\calH}
+		\right)
+		=
+		\frac{1}{N} \left(
+		k(x_N, x_N)^{1/2} + k(x'_N, x'_N)^{1/2}
+		\right)
+		\leq
+		\frac{2}{N}
+		.
+		\end{align}
+		As $D$ and $D'$ were arbitrary neighbouring databases, the claimed result follows.
+	\end{proof}
+\end{lemma}
+
+
+\begin{hprop}[\ref{prop:synthetic_subspace_privacy}.]
+	If $k(x, x) \leq 1$ for all $x \in \calX$, then Algorithm~\ref{alg:synthetic_subspace} is $(\varepsilon, \delta)$-differentially private.
+	\begin{proof}
+		As the synthetic data points $z_1, \ldots, z_M$ do not depend on the private data, it suffices to show that the weights $w_1, \ldots, w_M$ are $(\varepsilon, \delta)$-differentially private. However, these weights result from data-independent post-processing of the coefficients $\boldsymbol{\beta}$, which are a perturbed version of the coefficients $\boldsymbol{\alpha}$, with the perturbation provided by the privacy-protecting \emph{Gaussian mechanism}~\cite{dwork_algorithmic_2014}. It remains to verify that the Gaussian mechanism employs sufficiently scaled noise; in particular we need to verify that $2/N \geq \Delta_2 := \sup_{D, D': D \sim D'} \| \boldsymbol{\alpha} - \boldsymbol{\alpha}' \|_2$.
+		
+		But indeed, since $b_1, \ldots, b_F$ are orthonormal, for any $\boldsymbol{\alpha}$ and $\boldsymbol{\alpha}'$ computed using neighbouring databases,
+		\begin{equation}
+		\left\| \boldsymbol{\alpha} - \boldsymbol{\alpha}' \right\|_2
+		= \left( \sum_{f = 1}^F (\alpha_f - \alpha'_f)^2 \right)^{1/2}
+		= \left\| \overline{\hat{\mu}_N} - \overline{\hat{\mu}'_N} \right\|_{\calH}
+		\leq \left\| \hat{\mu}_N - \hat{\mu}'_N \right\|_{\calH}
+		\leq \frac{2}{N}
+		,
+		\end{equation}
+		(last inequality is Lemma~\ref{lem:KME_RKHS_sensitivity}) as required to verify the Gaussian mechanism. Then $(\varepsilon, \delta)$-differential privacy for the entire algorithm follows.
+	\end{proof}
+\end{hprop}
+
+
+
+\subsection{Algorithm 2 (Random Features RKHS Algorithm): Consistency}
+\label{app:sec:random_features_consistency}
+
+As a preliminary lemma, we first show that a uniform convergence result for the random features $\phi$ translates into a bound on the error incurred by Algorithm~\ref{alg:random_features} due to using random features instead of the original kernel $k$.
+
+\begin{lemma}
+Let $\hat{\mu}^{\text{out}}_X := \sum_{m = 1}^M w_m k(z_m, \cdot) \in \calH$ be the element in $\calH$ represented by the output of Algorithm~\ref{alg:random_features}. Let $\hat{\mu}^{\phi, \text{out}}_X := \sum_{m = 1}^M w_m \phi(z_m)$ be the corresponding element in the random features RKHS $\calH_{\phi}$. If the random feature scheme $\phi$ is such that $\sup_{x, x' \in \calX} | \phi(x)^T \phi(x') - k(x, x') | < \delta$, then the following bound on the ``random features error" holds:
+\begin{equation*}
+\left|
+\left\| \hat{\mu}^{\phi, \text{out}}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+-
+\left\| \hat{\mu}^{\text{out}}_X - \hat{\mu}_X \right\|_{\calH}
+\right|
+\leq
+2 \sqrt{\delta}
+.
+\end{equation*}
+\label{app:lem:random_features_uniform_convergence}
+\begin{proof}
+Expanding the RKHS norms using bilinearity of inner products, we have
+\begin{align*}
+&\left|
+\left\| \hat{\mu}^{\phi, \text{out}}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+-
+\left\| \hat{\mu}^{\text{out}}_X - \hat{\mu}_X \right\|_{\calH}
+\right|
+\\&=
+\Bigg| \left(
+\sum_{m_1 = 1}^M \sum_{m_2 = 1}^M w_{m_1} w_{m_2} \phi(z_{m_1})^T \phi(z_{m_2})
++
+\sum_{n_1 = 1}^N \sum_{n_2 = 1}^N \frac{1}{N} \frac{1}{N} \phi(x_{n_1})^T \phi(x_{n_2})
+-
+2 \sum_{m = 1}^M \sum_{n = 1}^N w_m \frac{1}{N} \phi(z_m)^T \phi(x_n)
+\right)^{1/2}
+\\&-
+\left(
+\sum_{m_1 = 1}^M \sum_{m_2 = 1}^M w_{m_1} w_{m_2} k(z_{m_1}, z_{m_2})
++
+\sum_{n_1 = 1}^N \sum_{n_2 = 1}^N \frac{1}{N} \frac{1}{N} k(x_{n_1}, x_{n_2})
+-
+2 \sum_{m = 1}^M \sum_{n = 1}^N w_m \frac{1}{N} k(z_m, x_n)
+\right)^{1/2} \Bigg|
+\end{align*}
+Since $\sum_{m = 1}^M |w_m| \leq 1$ by construction and $\sum_{n = 1}^N \frac{1}{N} = 1$, thanks to the assumption on $\phi$ this expression is of the form
+\begin{equation*}
+\Big| (a + b + 2c)^{1/2} - (A + B + 2C)^{1/2} \Big|
+\end{equation*}
+for suitable $a, A, b, B, c, C \in \IR$ with $|a - A|, |b - B|, |c - C| < \delta$. By monotonicity of the square root function, this expression is maximised when $A = a + \delta$, $B = b + \delta$, $C = c + \delta$. Writing $s := a + b + 2C$, we have
+\begin{equation*}
+\Big| (a + b + 2c)^{1/2} - (A + B + 2C)^{1/2} \Big|
+\leq | s^{1/2} - (s + 4 \delta)^{1/2} |
+= (s + 4 \delta)^{1/2} - s^{1/2}
+\leq s^{1/2} + 2 \delta^{1/2} - s^{1/2}
+= 2 \delta^{1/2}
+.
+\qedhere
+\end{equation*}
+\end{proof}
+\end{lemma}
+
+
+\begin{hthm}[\ref{thm:random_features_consistency}]
+	\label{app:thm:random_features}
+	Suppose that the random features $\phi$ converge $\phi(\cdot)^T \phi(\cdot) \to k(\cdot, \cdot)$ uniformly in $\calX$ as the number of random features $J \to \infty$. Assume also availability of an approximate Reduced set construction method that solves the minimisation (\ref{eq:random_features_preimage_minimisation}) either up to a constant multiplicative error, or with an absolute error that can be made arbitrarily small. Then Algorithm~\ref{alg:random_features} outputs a consistent estimator of the kernel mean embedding $\mu_X$ in the sense that
+	\begin{equation}
+	\sum_{m = 1}^M w_m k(z_m, \cdot)
+	\stackrel{\IP}{\to}
+	\mu_X
+	\hspace{2em} \text{as } N \to \infty
+	.
+	\end{equation}
+	\begin{proof}
+		The output of Algorithm~\ref{alg:random_features} specifies an element $\hat{\mu}^{\text{out}}_X := \sum_{m = 1}^M w_m k(z_m, \cdot) \in \calH$ in the RKHS $\calH$ of $k$. Its RKHS distance to the true kernel mean embedding $\mu_X$ of $X$ can be upper bounded by a decomposition using the Triangle inequality, where we write $\hat{\mu}^{\phi, \text{out}}_X := \sum_{m = 1}^M w_m \phi(z_m)$ for the element of $\calH_{\phi}$ that the Reduced set method constructs to approximate the privacy-protected $\tilde{\mu}^{\phi}_X$:
+		\begin{align}
+		\left\| \mu_X - \hat{\mu}^{\text{out}}_X \right\|_{\calH}
+		&\leq
+		\underbrace{
+			\left\| \mu_X - \hat{\mu}_X \right\|_{\calH}
+		}_{\text{finite sample error}}
+		+
+		\underbrace{
+			\left\| \hat{\mu}_X - \hat{\mu}^{\text{out}}_X \right\|_{\calH}
+		}_{\text{other errors}}
+		\nonumber\\&\leq
+		\underbrace{
+			\left\| \mu_X - \hat{\mu}_X \right\|_{\calH}
+		}_{\text{finite sample error}}
+		+
+		\underbrace{
+			\left| \left\| \hat{\mu}^{\phi, \text{out}}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}} - \left\| \hat{\mu}_N - \hat{\mu}^{\text{out}}_X \right\|_{\calH} \right|
+		}_{\text{random features error}}
+		+
+		\underbrace{
+			\left\| \hat{\mu}^{\phi, \text{out}}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+		}_{\text{other errors}}
+		\nonumber\\&\leq
+		\underbrace{
+			\left\| \mu_X - \hat{\mu}_X \right\|_{\calH}
+		}_{\text{finite sample error}}
+		+
+		\underbrace{
+			\left| \left\| \hat{\mu}^{\phi, \text{out}}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}} - \left\| \hat{\mu}_N - \hat{\mu}^{\text{out}}_X \right\|_{\calH} \right|
+		}_{\text{random features error}}
+		\nonumber\\&+
+		\underbrace{
+			\left\| \hat{\mu}^{\phi, \text{out}}_X - \tilde{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+		}_{\text{reduced set error}}
+		+
+		\underbrace{
+			\left\| \tilde{\mu}^{\phi}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+		}_{\text{privacy error}}
+		.
+		\label{app:eq:alg2_error_decomposition}
+		\end{align}
+		The finite sample error tends to $0$ as $N \to \infty$ in probability by consistency of the empirical kernel mean estimate. The random features error goes to $0$ as $N \to \infty$ by Lemma~\ref{app:lem:random_features_uniform_convergence}, since $J \to \infty$ as $N \to \infty$ and $\phi(\cdot)^T \phi(\cdot) \to k(\cdot, \cdot)$ uniformly in $\calX$ as $J \to \infty$. The privacy error goes to $0$ as $N \to \infty$ by the same argument as in the proof of Theorem~\ref{thm:synthetic_subspace_consistency}, with $F$ replaced by $J$. So it remains to show that the reduced set error also goes to $0$ as $N \to \infty$, in probability.
+		
+		First, note that the private empirical kernel mean embedding $\hat{\mu}_X^{\phi} = \frac{1}{N} \sum_{n = 1}^N \phi(x_n)$ is in the feasible set of the constrained minimisation problem solved by the reduced set method, as the sum of absolute values of weights in this expansion is $N | \frac{1}{N} | = 1 \leq 1$. The RKHS $\calH_{\phi}$ distance of $\hat{\mu}_X^{\phi}$ to the optimisation target $\tilde{\mu}^{\phi}_X$ equals the privacy error, so it follows that the reduced set error is upper bounded by the privacy error, and hence also goes to $0$ as $N \to \infty$:
+		\begin{equation}
+		\underbrace{
+			\left\| \hat{\mu}^{\phi, \text{out}}_X - \tilde{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+		}_{\text{reduced set error}}
+		\leq
+		\underbrace{
+			\left\| \tilde{\mu}^{\phi}_X - \hat{\mu}^{\phi}_X \right\|_{\calH_{\phi}}
+		}_{\text{privacy error}}
+		\stackrel{\IP}{\to} 0 \text{ as } N \to \infty
+		,
+		\end{equation}
+		as required to complete the proof.
+	\end{proof}
+\end{hthm}
+
+
+\begin{corollary}
+	Let $f$ be any continuous function. Then whenever $k$ is a $c_0$-universal kernel, applying $f$ to the points output by Algorithm~\ref{alg:random_features} yields a consistent estimator of the kernel mean embedding $\mu_{f(X)}$ of $f(X)$.
+	\begin{proof}
+		Noting that the sum of absolute values of weights $w_m$ output by Algorithm~\ref{alg:random_features} is at most $C$ by construction, in light of Theorem~\ref{thm:random_features_consistency} we see that Theorem 1 of~\cite{scibior_consistent_2016} applies and gives the desired conclusion.
+	\end{proof}
+\end{corollary}
+
+
+
+\subsection{Algorithm 2 (Random Features RKHS Algorithm): Convergence Rate}
+\label{app:sec:random_features_convergence_rate}
+
+\begin{hprop}[\ref{thm:random_features_consistency}]
+Suppose that $\phi$ is a random feature scheme for the kernel $k$ that converges uniformly on any compact set at a rate $\calO_p(J^{-1/2})$ with the number $J$ of random features. Then $J(N)$ can be chosen such that if the employed Reduced set method finds a global optimum of (\ref{eq:random_features_preimage_minimisation}), Algorithm~\ref{alg:random_features} outputs an element that converges to the true kernel mean embedding $\mu_X$ at a rate $\calO_p(N^{-1/3})$.
+\begin{proof}
+Equation (\ref{app:eq:alg2_error_decomposition}) shows that the error $\left\| \mu_X - \hat{\mu}^{\text{out}}_X \right\|_{\calH}$ between the released element $\hat{\mu}^{\text{out}}_X$ and the true kernel mean embedding $\mu_X$ can be upper bounded by the sum of four terms: the finite sample error, the random features error, the reduced set error, and the privacy error.
+Arguing as in the proof of Proposition~\ref{prop:alg1_rate_no_publishable_subset}, the finite sample error vanishes at a rate $\calO_p(N^{-1/2})$.
+The proof of Theorem~\ref{thm:random_features_consistency} shows that the reduced set error is upper bounded by the privacy error, which itself vanishes at a rate of $\calO_p(\sqrt{J}/N)$ by the argument given in the proof of Theorem~\ref{thm:synthetic_subspace_consistency}, with $F$ replaced by $J$.
+Lemma~\ref{app:lem:random_features_uniform_convergence} implies that if the random features converge uniformly at a rate $\calO_p(J^{-1/2})$, then the random features error vanishes at a rate $\calO_p(J^{-1/4})$. The total convergence rate is thus
+\begin{equation*}
+\calO_p\left( N^{-1/2} + \frac{\sqrt{J}}{N} + J^{-1/4} \right)
+\end{equation*}
+and we can check that this becomes $\calO_p(N^{-1/3})$ by setting $J = \lfloor N^{4/3} \rfloor$.
+\end{proof}
+\end{hprop}
+
+
+
+\subsection{Algorithm 2 (Random Features RKHS Algorithm): Differential Privacy}
+\label{app:sec:random_features_privacy}
+
+\begin{hprop}[\ref{prop:random_features_privacy}]
+	Assume that the random feature vectors produced by $\phi$ are bounded by $1$ in $L_2$ norm ($\| \phi(x) \|_2 \leq 1$ for all $x \in \calX$). Then Algorithm~\ref{alg:random_features} is $(\varepsilon, \delta)$-differentially private.
+	\begin{proof}
+		The output of the algorithm is produced by a Reduced set method that is initialised blindly to the database and optimises RKHS distance to the element $\tilde{\mu}^{\phi}_X \in \calH_{\phi}$, while only having access to the distance to it, rather than any representation of $\tilde{\mu}^{\phi}_X$. As $\tilde{\mu}^{\phi}_X$ can be seen as a vector in $\IR^J$ obtained by perturbing $\hat{\mu}^{\phi}_X$ using the Gaussian mechanism with $\Delta_2 = \frac{2}{N}$, it suffices to show that the $L_2$-sensitivity of $\hat{\mu}^{\phi}_X$ is upper bounded by $\frac{2}{N}$. To this end, assume $D = \{ x_1, \ldots, x_N \}$ and $D' = \{ x'_1, \ldots, x'_N \}$ are two neighbouring databases of cardinality $N$, differing w.l.o.g.~in their last element only. Then
+		\begin{align}
+		\| \hat{\mu}_{D}^{\phi} - \hat{\mu}_{D'}^{\phi} \|_2
+		&=
+		\Bigg\| \frac{1}{N} \sum_{n = 1}^N \phi(x_n) - \frac{1}{N} \sum_{n = 1}^N \phi(x_n') \Bigg\|_2
+		\\&=
+		\frac{1}{N} \| \phi(x_N) - \phi(x_N') \|_2
+		\\&\leq
+		\frac{1}{N} \| \phi(x_N) \|_2 + \frac{1}{N} \| \phi(x_N') \|_2
+		\leq
+		\frac{2}{N}
+		,
+		\end{align}
+		as required to complete the proof.
+	\end{proof}
+\end{hprop}
+
+
+
+\section{Setup of Empirical Illustrations}
+\label{app:sec:experiments}
+
+We considered two scenarios in our basic empirical evaluations shown in Sections~\ref{sec:perturb_in_synthetic_subspace} and~\ref{sec:perturb_in_random_features_RKHS}:
+\begin{enumerate}
+	\item \emph{No publishable subset}: No rows of the private database are, or can be made public without some privacy-ensuring modification.
+	\item \emph{Publishable subset}: A small part of the private database is already public, or can be made public, perhaps for one of the several possible reasons outlined in Section~\ref{sec:introduction}.
+\end{enumerate}
+To illustrate the impact of data dimensionality on the performance of the proposed algorithms, we provide results on datasets with data dimension $D = 2$ and $D = 5$. In both cases we constructed a synthetic private dataset by sampling $N = 100,000$ data points from a multivariate Gaussian mixture distribution. The mixture had $10$ components, with mixing weights proportional to $1, \frac{1}{2}, \ldots, \frac{1}{10}$, and the means of the components were chosen randomly themselves from a spherical Gaussian distribution with mean $[100, \ldots, 100]$ and covariance $200 I_D$. Each of the $N$ private data points was simulated by first sampling its mixture component using the mixing weights as probabilities, and then the point itself was sampled from a spherical Gaussian centered at the mean of the chosen mixture component and with covariance $30 I_D$.
+
+We chose to work with the widely popular exponentiated quadratic kernel $k(x_1, x_2) = e^{-\gamma \| x_1 - x_2 \|_2^2}$ for $\IR^D$-valued data (also known as a Gaussian kernel, or a squared exponential kernel), with the parameter setting $\gamma = 10^{-4} / D$. This kernel is known to be \emph{characteristic}~\cite{FukGreSunSch08}, and so as discussed in Section~\ref{sec:background:kernels}, no information about the data generating distribution $p_X$ is lost by working with its kernel mean embedding $\mu_X$.
+
+We used our proposed algorithms to release an approximate version of the empirical KME of the private database, in such a way that the output satisfies the definition of $(\varepsilon, \delta)$-differential privacy. We investigated the common privacy levels given by $\varepsilon \in \{ 0.01, 0.1, 1.0 \}$, and used the fixed value of $\delta = 10^{-6}$, which satisfies the usual requirement that $\delta \ll \frac{1}{N}$.
+
+
+\subsection{Evaluation Metric}
+
+The geometry of the RKHS $\calH$ allows comparing the performance of different algorithms by computing the RKHS distance $\Delta$ between the empirical KME $\hat{\mu}_X$ computed using all $N$ private data points (and which could not have been released without violating differential privacy) and the element of the RKHS represented by the actually released weighted set of synthetic data points $(z_1, w_1), \ldots, (z_M, w_M)$:
+\begin{equation*}
+\Delta := \left\| \hat{\mu}_X - \sum_{m = 1}^M w_m k(z_m, \cdot) \right\|_{\calH}
+.
+\end{equation*}
+Moreover, as the empirical KME $\hat{\mu}_X$ is based on a large sample size of $N = 100,000$ i.i.d.~data points, it can be expected to be a good proxy for the true KME $\mu_X$ of the data-generating random variable $X$. In that case $\Delta$ is also a good proxy for the RKHS distance between the true KME $\mu_X$ and the RKHS element represented by the released dataset.
+
+
+\subsection{Scenario 1: No Publishable Subset}
+\label{sec:experiments:nodata}
+
+Algorithm~\ref{alg:synthetic_subspace} requires specifying the synthetic data points $z_1, \ldots, z_M$ in advance, before seeing the private data. If no part of the private data has already been published (which could then be used for the synthetic data points), one can construct the synthetic data points by sampling them randomly from a suitable probability distribution $q$. For the consistency result of Theorem~\ref{thm:synthetic_subspace_consistency} to apply, the support of $q$ must include all possible private data points. In our case the private data takes values in $\IR^D$, and so this requirement is satisfied by any distribution on $\IR^D$ with full support. We used a spherical Gaussian distribution $q = \mathcal{N}(0, \sigma_q I_D)$ with $\sigma_q = 500$ for sampling the synthetic data points.
+
+The implementation of Algorithm~\ref{alg:random_features} used $J = 10,000$ random features for accurate approximation of the kernel, and an iterative gradient-based optimisation procedure to solve the reduced set problem (Equation (\ref{eq:random_features_preimage_minimisation}) in Algorithm~\ref{alg:random_features}).
+
+Figure~\ref{fig:nodata} shows how the RKHS distance $\Delta$ changes with the number of synthetic data points $M$, for different requested privacy level $\varepsilon$ for Algorithm~\ref{alg:synthetic_subspace} (solid lines) and Algorithm~\ref{alg:random_features} (dashed lines), on datasets with dimensionality $D = 2$ (left subfigure) and $D = 5$ (right subfigure). We observe that the additional ability of Algorithm~\ref{alg:random_features} to optimise the \emph{locations} of the synthetic data points (rather than just the weights, as is the case for Algorithm~\ref{alg:synthetic_subspace}) is more helpful in the higher-dimensional case $D = 5$, where the randomly sampled synthetic data points are less likely to land close to private data points.
+
+
+
+\subsection{Scenario 2: Publishable Subset}
+\label{sec:experiments:leaks}
+
+Here we explored the interesting scenario where one can exploit the fact that a small part of the private database is actually public, and use the public rows as the fixed synthetic data points in Algorithm~\ref{alg:synthetic_subspace}. Specifically, we assume (without loss of generality) that the first $M$ rows of the private database (where $M \ll N$) are public, and we take the synthetic data points to be $z_1 \gets x_1, \ldots, z_M \gets x_M$.
+
+Observe that in this case $\hat{\mu}^{\text{baseline}} := \frac{1}{M} \sum_{m = 1}^M k(z_m, \cdot)$, i.e., uniform weighting of the synthetic data points, is already expected to be a strong baseline since $\hat{\mu}^{\text{baseline}}$ is itself a consistent estimator of $\mu_X$, (although based on a much smaller sample size $M \ll N$). The purpose of Algorithm~\ref{alg:synthetic_subspace} is to find (generally non-uniform) $w_1, \ldots, w_M$ that reweight the public data points using the information in the large private dataset, but respecting differential privacy. Figure~\ref{fig:leaks} shows how the RKHS distance $\Delta$ changes with the number of public data points $M$, for different privacy levels $\varepsilon$.
+
+For comparison, the figures also show the RKHS distances $\Delta$ achieved by the baseline that simply weights the public points uniformly. We can see that in both cases $D = 2$ and $D = 5$, if the ratio of public to private points is low enough, Algorithm~\ref{alg:synthetic_subspace} provides a substantial benefit over this baseline (note the logarithmic scaling). Since usually obtaining permission to publish a larger subset of the private data unchanged will come at an increased cost, the ability to instead reweight a smaller public dataset using Algorithm~\ref{alg:synthetic_subspace} in a differentially private manner is useful.

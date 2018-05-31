@@ -1,0 +1,6 @@
+{
+    "D": 5,
+    "N": 100000,
+    "dataset": "mixture_of_Gaussians",
+    "kernel_mean_EQKernel(D=5, gamma=0.000020)": 0.1672984963245975
+}

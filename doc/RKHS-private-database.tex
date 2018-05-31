@@ -1,0 +1,517 @@
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+%\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2018} with \usepackage[nohyperref]{icml2018} above.
+\usepackage{hyperref}
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+%\usepackage{icml2018}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2018}
+
+% -------------------- BEGIN USER MACROS --------------------
+
+\usepackage{subcaption}		% replaced obsolete subfigure environment
+
+% Algorithms
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% Mathematics
+\usepackage{amsmath}
+\usepackage{amsfonts}								% contains mathbb command
+\usepackage{dsfont}            			% indicators
+\renewcommand{\d}{\,\mathrm{d}}			% differential
+\newcommand{\argmin}{\operatorname*{argmin}}	% argmin
+\newcommand{\argmax}{\operatorname*{argmax}}	% argmax
+\newcommand{\Lap}{\operatorname{Lap}}		% Laplace distribution
+\newcommand{\supp}{\operatorname{supp}}	% supremum
+\newcommand{\bx}{\mathbf{x}}			  		% boldface x
+\newcommand{\calA}{\mathcal{A}}			% caligraphic A
+\newcommand{\calH}{\mathcal{H}}			% caligraphic H
+\newcommand{\calL}{\mathcal{L}}			% caligraphic L
+\newcommand{\calN}{\mathcal{N}}			% caligraphic N
+\newcommand{\calO}{\mathcal{O}}			% caligraphic O
+\newcommand{\calU}{\mathcal{U}}			% caligraphic U
+\newcommand{\calX}{\mathcal{X}}			% caligraphic X
+\newcommand{\IE}{\mathbb{E}}  			% expectation
+\newcommand{\IN}{\mathbb{N}}  			% natural numbers
+\newcommand{\IP}{\mathbb{P}}  			% probability
+\newcommand{\IR}{\mathbb{R}}  			% real numbers
+
+% Theorems
+\usepackage{amsthm}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem*{notation}{Notation}
+
+% Hand-numbered theorems in the Appendix
+\usepackage{thmtools}
+\declaretheoremstyle[notefont=\bfseries,notebraces={}{},headpunct={},postheadspace=1em]{mystyle}
+\declaretheorem[style=mystyle,numbered=no,name=Theorem]{hthm} 		%hand numbered Theorem
+\declaretheorem[style=mystyle,numbered=no,name=Lemma]{hlem} 		%hand numbered Lemma
+\declaretheorem[style=mystyle,numbered=no,name=Proposition]{hprop} 	%hand numbered Proposition
+\declaretheorem[style=mystyle,numbered=no,name=Corollary]{hcorl} 	%hand numbered Corollary
+
+% -------------------- END USER MACROS --------------------
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Differentially Private Database Release via Kernel Mean Embeddings}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Differentially Private Database Release via Kernel Mean Embeddings}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2018
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Matej Balog}{ei,cam}
+\icmlauthor{Ilya Tolstikhin}{ei}
+\icmlauthor{Bernhard Sch\"olkopf}{ei}
+\end{icmlauthorlist}
+
+\icmlaffiliation{ei}{MPI-IS, T{\"u}bingen, Germany}
+\icmlaffiliation{cam}{University of Cambridge, UK}
+
+\icmlcorrespondingauthor{Matej Balog}{first.surname@gmail.com}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{Machine Learning, ICML, kernels, RKHS, differential privacy, synthetic database}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+%\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+We lay theoretical foundations for new database release mechanisms that allow third-parties to construct consistent estimators of population statistics, while ensuring that the privacy of each individual contributing to the database is protected. The proposed framework rests on two main ideas. First, releasing (an estimate of) the kernel mean embedding of the data generating random variable instead of the database itself still allows third-parties to construct consistent estimators of a wide class of population statistics. Second, the algorithm can satisfy the definition of differential privacy by basing the released kernel mean embedding on entirely synthetic data points, while controlling accuracy through the metric available in a Reproducing Kernel Hilbert Space. We describe two instantiations of the proposed framework, suitable under different scenarios, and prove theoretical results guaranteeing differential privacy of the resulting algorithms and the consistency of estimators constructed from their outputs.
+\end{abstract}
+
+
+
+\section{Introduction}
+\label{sec:introduction}
+
+We aim to contribute to the body of research on the trade-off between releasing datasets from which publicly beneficial statistical inferences can be drawn, and between protecting the privacy of individuals who contribute to such datasets. Currently the most successful formalisation of protecting user privacy is provided by \emph{differential privacy}~\cite{dwork_algorithmic_2014}, which is a \emph{definition} that any algorithm operating on a database may or may not satisfy. An algorithm that does satisfy the definition ensures that a particular individual does not lose too much privacy by deciding to contribute to the database on which the algorithm operates.
+
+While differentially private algorithms for releasing entire databases have been studied previously~\cite{blum_learning_2008,wasserman_statistical_2008,zhou_differential_2009}, most algorithms focus on releasing a privacy-protected version of a particular summary statistic, or of a statistical model trained on the private dataset. In this work we revisit the more difficult \emph{non-interactive}, or \emph{offline} setting, where the database owner aims to release a privacy-protected version of the entire database without knowing what statistics third-parties may wish to compute in the future.
+
+In our new framework we propose to use the kernel mean embedding~\cite{smola_hilbert_2007} as an intermediate representation of a database.
+It is (1) sufficiently rich in the sense that it captures a wide class of statistical properties of the data, while at the same time (2) it lives in a Reproducing Kernel Hilbert Space (RKHS), where it can be handled mathematically in a principled way and privacy-protected in a unified manner, independently of the type of data appearing in the database.
+Although kernel mean embeddings are functions in an abstract Hilbert space, in practice they can be (at least approximately) represented using a possibly weighted set of data points in input space (i.e.~a set of database rows).
+The privacy-protected kernel mean embedding is released to the public in this representation, however, using synthetic datapoints instead of the private ones. As a result, our framework can be seen as leading to \emph{synthetic database} algorithms.
+
+We validate our approach by instantiating two concrete algorithms and proving that they output consistent estimators of the true kernel mean embedding of the data generating process, while satisfying the definition of differential privacy. The consistency results ensure that third-parties can carry out a wide variety of statistically founded computation on the released data, such as constructing consistent estimators of population statistics, estimating the Maximum Mean Discrepancy (MMD) between distributions, and two-sample testing~\citep{gretton_kernel_2012}, or using the data in the kernel probabilistic programming framework for random variable arithmetics~\citep[Section 3]{scholkopf_computing_2015, scibior_consistent_2016}, repeatedly and unlimitedly without being able to, or having to worry about, violating user privacy.
+
+One of our algorithms is especially suited to the interesting scenario where a (small) subset of a database has already been published. This situation can arise in a wide variety of settings, for example, due to weaker privacy protections in the past, due to a leak, or due to the presence of an incentive, financial or otherwise, for users to publish their data. In such a situation our algorithm provides a principled approach for reweighting the public data in such a way that the accuracy of statistical inferences on this dataset benefits from the larger sample size (including the private data), while maintaining differential \mbox{privacy for the undisclosed data}.
+
+In summary, the contributions of this paper are:
+\begin{enumerate}
+	\item A new framework for designing database release algorithms with the guarantee of differential privacy. The framework uses kernel mean embeddings as intermediate database representations, so that the RKHS metric can be used to control accuracy of the released synthetic database in a principled manner (Section~\ref{sec:framework}).
+	\item Two instantiations of our framework in the form of two synthetic database algorithms, with proofs of their consistency, convergence rates and differential privacy, as well as basic empirical illustrations of their performance on synthetic datasets (Sections~\ref{sec:perturb_in_synthetic_subspace} and~\ref{sec:perturb_in_random_features_RKHS}).
+\end{enumerate}
+
+
+
+\section{Background}
+\label{sec:background}
+
+
+\subsection{Differential Privacy}
+\label{sec:background:differential_privacy}
+
+\begin{definition}[\citealp{dwork_differential_2006}]
+	For $\varepsilon > 0$, $\delta \geq 0$, algorithm $\calA$ is said to be $(\varepsilon, \delta)$-differentially private if for all neighbouring databases $D \sim D'$ (differing in at most one element) and all measurable subsets $S$ of the co-domain of $\calA$,
+	\begin{equation}
+	\IP\left( \calA(D) \in S \right)
+	\leq e^{\varepsilon} \IP\left( \calA(D') \in S \right) + \delta
+	.
+	\end{equation}
+\end{definition}
+
+The parameter $\varepsilon$ controls the amount of information the algorithm can leak about an individual, while a positive $\delta$ allows the algorithm to produce an unlikely output that leaks more information, but only with probability up to $\delta$. This notion is sometimes called \emph{approximate} differential privacy; an algorithm that is $(\varepsilon, 0)$-differentially private is simply said to be $\varepsilon$-differentially private. Note that any non-trivial differentially private algorithm must be randomised; the definition asserts that the distribution of algorithm outputs is not too sensitive to changing one row in the database.
+
+When the algorithm's output is a finite vector $\calA(D) \in \IR^J$, two standard random perturbation mechanisms for making this output differentially private are the \emph{Laplace} and \emph{Gaussian} mechanisms. As the perturbation needs to mask the contribution of each individual entry of the database $D$, the scale of the added noise is closely linked to the notion of \emph{sensitivity}, measuring how much the algorithm's output can change due to changing a single data point:
+\begin{align}
+\Delta_1
+&:=
+\sup_{D \sim D'} \left\| \calA(D) - \calA(D') \right\|_1
+,
+\\
+\Delta_2
+&:=
+\sup_{D \sim D'} \left\| \calA(D) - \calA(D') \right\|_2
+.
+\end{align}
+The Laplace mechanism adds i.i.d.~$\Lap(\Delta_1 / \varepsilon)$ noise to each of the $J$ coordinates of the output vector and ensures pure $\varepsilon$-differential privacy, while the Gaussian mechanism adds i.i.d.~$\calN(0, \sigma^2)$ noise to each coordinate, where $\sigma^2 > 2 \Delta_2^2 \ln(1.25 / \delta) / \varepsilon^2$, and ensures $(\varepsilon, \delta)$-differential privacy. Applying these mechanisms thus requires computing (an upper bound on) the relevant sensitivity.
+
+Differential privacy is preserved under post-processing: if an algorithm $\calA$ is $(\varepsilon, \delta)$-differentially private, then so is its sequential composition $\mathcal{B}(\calA(\cdot))$ with any other algorithm $\mathcal{B}$ that does not have direct or indirect access to the private database $D$~\cite{dwork_algorithmic_2014}.
+
+
+\subsection{Kernels, RKHS, and Kernel Mean Embeddings}
+\label{sec:background:kernels}
+
+A kernel on a non-empty set (data type) $\calX$ is a binary positive-definite function $k(\cdot, \cdot) : \calX \times \calX \to \IR$.  Intuitively it can be thought of as expressing the similarity between any two elements in $\calX$. The literature on kernels is vast and their properties are well studied~\cite{scholkopf_learning_2001}; many kernels are known for a large variety of data types such as vectors, strings, time series, graphs, etc, and kernels can be composed to yield valid kernels for composite data types (e.g.~the type of a database row containing both numerical and string data).
+
+The \emph{kernel mean embedding} (KME) of an $\calX$-valued random variable $X$ in the RKHS is the function $\mu_X^k : \calX \to \IR$, $y \mapsto \mathbb{E}_X[k(X, y)]$, defined whenever $E_X[\sqrt{k(X, X)}] < \infty$~\cite{smola_hilbert_2007}. Several popular kernels have been proved to be \emph{characteristic}~\cite{FukGreSunSch08}, in which case the map $p_X \mapsto \mu_X^k$, where $p_X$ is the distribution of $X$, is injective. This means that no information about the distribution of $X$ is lost when passing to its KME $\mu_X^k$.
+
+In practice, the KME of a random variable $X$ is approximated using a sample $x_1, \ldots, x_N$ drawn from $X$, which can be used to construct an \emph{empirical KME} $\hat{\mu}_X^k$ of $X$ in the RKHS: a function given by $y \mapsto \frac{1}{N} \sum_{n = 1}^N k(x_n, y)$.
+When the $x_n$'s are i.i.d., under a boundedness condition $\hat{\mu}_X^k$ converges to the true KME $\mu^k_X$ at rate $\calO_p(N^{-1/2})$, independently of the dimension of $\calX$ \citep{LopMuaSchTol15}%
+\footnote{The KME can be viewed as a smoothed version of the density, which is easier to estimate than the density itself; rates of nonparametric density estimation or statistical powers of two-sample or independence tests involving $p_X$ are known to necessarily degrade with growing dimension~\citep[Section 4.3]{tolstikhin2017minimax}.}%
+.
+Our approach relies on the metric of the RKHS in which these KMEs live. The RKHS $\calH_k$ is a space of functions, endowed with an inner product $\langle \cdot, \cdot \rangle_{\calH_k}$ that satisfies the \emph{reproducing} property $\langle k(x, \cdot), h \rangle = h(x)$ for all $x \in \calX$ and $h \in \calH_k$. The inner product induces a norm $\| \cdot \|_{\calH_k}$, which can be used to measure distances $\| \mu^k_X - \mu^k_Y \|_{\calH_k}$ between distributions of $X$ and $Y$. This can be exploited for various purposes such as two-sample tests~\citep{gretton_kernel_2012}, independence testing~\citep{gretton_measuring_2005}, or one can attempt to minimise this distance in order to match one distribution to another.
+
+An example of such minimisation are \emph{reduced set methods}~\citep[Chap.~18]{burges_simplified_1996, scholkopf_learning_2001}, which replace a set of points $S = \{x_1, \ldots, x_N \} \subseteq \calX$ with a weighted set $R = \{ (z_1, w_1), \ldots, (z_M, w_M) \} \subseteq \calX \times \IR$ (of potentially smaller size), where the new points $z_m$ can, but need not equal any of the $x_n$s, such that the KME computed using the reduced set $R$ is close to the KME computed using the original set $S$, as measured by the RKHS norm:
+\begin{align*}
+&\left\| \mu^k_S - \mu^k_R \right\|_{\calH_k}
+\nonumber
+=
+\left\|
+\frac{1}{N} \sum_{n = 1}^N k(x_n, \cdot)
+- \sum_{m = 1}^M w_m k(z_m, \cdot)
+\right\|_{\mathcal{H}_k}
+%= \frac{1}{N^2} \sum_{i, j = 1}^N k(x_i, x_j) 
+%+ \sum_{i, j = 1}^M w_i w_j k(z_i, z_j)
+%- \frac{2}{N} \sum_{n = 1}^N \sum_{m = 1}^M w_m k(x_n, z_m)
+.
+\end{align*}
+Reduced set methods are usually motivated by the computational savings arising when $|R| < |S|$; we will invoke them mainly to replace a collection $S$ of private data points with a (possibly weighted) set $R$ of synthetic data points.
+
+
+
+\section{Framework}
+\label{sec:framework}
+
+
+\subsection{Problem Formulation}
+\label{sec:framework:problem_formulation}
+
+Throughout this work, we assume the following setup. A database curator wishes to publicly release a database $D = \{ x_1, \ldots x_N \} \in \calX^N$ containing private data about $N$ individuals, with each data point (database row) $x_n$ taking values in a non-empty set $\calX$. The set $\calX$ can be arbitrarily rich, for example, it could be a product of Euclidean spaces, integer spaces, sets of strings, etc.; we only require availability of a kernel function $k : \calX \times \calX \to \IR$ on $\calX$. We assume that the $N$ rows $x_1, \ldots, x_N$ in the database $D$ can be thought of as i.i.d.~observations from some $\calX$-valued data-generating random variable $X$ (but see Section~\ref{sec:discussion} for a discussion about relaxing this assumption). The database curator, wishing to protect the privacy of individuals in the database, seeks a database release mechanism that satisfies the definition of $(\varepsilon, \delta)$-differential privacy, with $\varepsilon > 0$ and $\delta \geq 0$ given. The main purpose of releasing the database is to allow third parties to construct estimators of population statistics (i.e.~properties of the distribution of $X$), but it is not known at the time of release what statistics the third-parties will be interested in.
+
+To lighten notation, henceforth we drop the superscript $k$ from KMEs (such as $\mu_X^k$) and the subscript $k$ from the RKHS $\calH_k$, whenever $k$ is the kernel on $\calX$ chosen by the database curator.
+
+
+\subsection{Algorithm Template}
+\label{sec:framework:template}
+
+We propose the following general algorithm template for differentially private database release:
+\begin{enumerate}
+	\item Construct a consistent estimator $\hat{\mu}_X$ of the KME $\mu_X$ of $X$ using the private database.
+	\item Obtain a perturbed version $\tilde{\mu}_X$ of the constructed estimate $\hat{\mu}_X$ to ensure differential privacy.
+	\item Release a (potentially approximate) representation of $\tilde{\mu}_X$ in terms of a (possibly weighted) dataset $\{ (z_1, w_1), \ldots, (z_M, w_M) \} \subseteq \calX \times \IR$.
+\end{enumerate}
+The released representation should be such that $\sum_{m = 1}^M w_m k(z_m, \cdot)$ is a consistent estimator of the true KME $\mu_X$, i.e.~such that the RKHS distance between the two converges to $0$ in probability as the private database size $N$, and together with it the synthetic database size $M$, go to infinity.
+
+Each step of this template admits several possibilities. For the first step we have discussed the standard empirical KME $\frac{1}{N} \sum_{n = 1}^N k(x_n, \cdot)$ with $x_1, \ldots, x_N$ i.i.d.~observations of $X$, but the framework remains valid with improved estimators such as \emph{kernel-based quadrature}~\cite{chen_herding_2010} or the \emph{shrinkage} kernel mean estimators of~\cite{muandet_kernel_2016}.
+
+As the KMEs $\hat{\mu}_X$ and $\mu_X$ live in the RKHS $\calH$ of the kernel $k$, a natural mechanism for privatising $\hat{\mu}_X$ in the second step would be to follow~\cite{hall_differential_2013} and pointwise add to $\hat{\mu}_X$ a suitably scaled sample path $g$ of a Gaussian process with covariance function $k(\cdot, \cdot)$. This does ensure $(\varepsilon, \delta)$-differential privacy of the resulting function $\tilde{\mu}_X = \hat{\mu}_X + g$, but unfortunately $\tilde{\mu}_X \not\in \calH$, because the RKHS norm $\| g \|_{\calH}$ of a Gaussian process sample path with the same kernel $k$ is infinite almost surely~\cite{rasmussen_gaussian_2005}. While our framework allows pursuing this direction by, for example, moving to a larger function space that does contain the Gaussian process sample path, in this work we will present algorithms that achieve differential privacy by mapping $\hat{\mu}_X$ into a finite-dimensional Hilbert space and then employing the standard Laplace or Gaussian mechanisms to the finite coordinate vector.
+
+Differential privacy is preserved under post-processing, but the third step does require some care to ensure that private data is not leaked. Specifically, when several possible (approximate) representations $\tilde{\mu}_X \approx \sum_{m = 1}^M w_m k(z_m, \cdot)$ in terms of a weighted dataset $(w_1, z_1), \ldots, (w_M, z_M)$ are possible, committing to a particular one reveals more information than just the function $\tilde{\mu}_X$ (consider, for example, the extreme case where the representation would be in terms of the private points $x_1, \ldots, x_N$). One thus needs to either control the privacy leak due to choosing a representation in a way that depends on the private data, or, as we do in our concrete algorithms below, choose a representation independently of the private data (but still minimising its RKHS distance to the privacy-protected $\tilde{\mu}_X$).
+
+
+\subsection{Versatility}
+
+Algorithms in our framework release a possibly weighted synthetic dataset $\{ (z_1, w_1), \ldots, (z_M, w_M) \} \subseteq \calX \times \IR$ such that $\sum_{m = 1}^M w_m k(z_m, \cdot)$ is a consistent estimator of the true KME $\mu_X$ of the data generating random variable $X$. This allows third-parties to perform a wide spectrum of statistical computation, all without having to worry about violating differential privacy:
+\begin{enumerate}
+	\item \emph{Kernel probabilistic programming}~\cite{scholkopf_computing_2015}: The versatility of our approach is greatly expanded thanks to the result of~\cite{scibior_consistent_2016}, who showed that under technical conditions, applying a continuous function $f$ to all points $z_m$ in the synthetic dataset yields a consistent estimator $\sum_{m = 1}^M w_m k_f(f(z_m), \cdot)$ of the KME $\mu_{f(X)}$ of the transformed random variable $f(X)$, even when the points $z_1, \ldots, z_M$ are not i.i.d. (as they may not be, depending on the particular synthetic database release algorithm).
+	\item \emph{Consistent estimation of population statistics}: For any RKHS function $h \in \calH$, we have $\langle \mu_X, h \rangle_{\calH} = \IE[h(X)]$, so a consistent estimator of $\mu_X$ yields a consistent estimator of the expectation of $h(X)$. It can be evaluated using the reproducing kernel property:
+	\begin{align}
+	\IE[h(X)]
+	&=
+	\langle \mu_X, h \rangle_{\calH}
+	\approx
+	\left\langle \sum_{m = 1}^M w_m k(z_m, \cdot), h \right\rangle_{\calH}
+	\nonumber
+	\\&=
+	\sum_{m = 1}^M w_m h(z_m)
+	.
+	\end{align}
+	For example, approximating the indicator function $\mathds{1}_S$ of a set $S \subseteq \calX$ with functions in the RKHS allows estimating probabilities: $\IE[ \mathds{1}_S(X) ] = \IP[X \in S]$ (note that $\mathds{1}_S$ itself may not be an element of the RKHS).
+	\item \emph{MMD estimation and two-sample testing}~\cite{gretton_kernel_2012}: Given another random variable $Y$ on $\calX$, one can consistently estimate the Maximum Mean Discrepancy (MMD) distance $\| \mu_X - \mu_Y \|_{\calH}$ between the distributions of $X$ and $Y$, and in particular to construct a two-sample test based on this distance. Given a sample $y_1, \ldots, y_L \sim Y$:
+	\begin{equation*}
+	\left\| \mu_X - \mu_Y \right\|_{\calH}
+	\approx
+	\left\| \sum_{m = 1}^M w_m k(z_m, \cdot) - \frac{1}{L} \sum_{l = 1}^L k(y_l, \cdot) \right\|_{\calH}
+	,
+	\end{equation*}
+	which can again be evaluated using the reproducing property.
+	\item \emph{Subsequent use of synthetic data}: Since the output of the algorithm is a (possibly weighted) database, third-parties are free to use this data for arbitrary purposes, such as training any machine learning model on this data. Models trained purely on this data can be released with differential privacy guaranteed; however, the accuracy of such models on real data remains an empirical question that is beyond the scope of this work.
+\end{enumerate}
+
+An orthogonal spectrum of versatility arises from the fact that the third step in the algorithm template can constrain the released dataset $(z_1, w_1), \ldots, (z_M, w_M)$ to be more convenient or more computationally efficient for further processing. For example, one could fix the weights to uniform $w_m = \frac{1}{M}$ to obtain an unweighted dataset, or to replace an expensive data type with a cheaper subset, such as requesting floats instead of doubles in the $z_m$'s. All this can be performed while an RKHS distance is available to control accuracy between $\tilde{\mu}_X$ and its released representation.
+
+
+\subsection{Concrete Algorithms}
+\label{sec:framework:concrete}
+
+As a first illustrative example, we describe how a particular case of an existing, but inefficient synthetic database algorithm already fits into our framework. The \emph{exponential mechanism}~\citep{mcsherry_mechanism_2007} is a general mechanism for ensuring $\varepsilon$-differential privacy, and in our setting it operates as follows: given a similarity measure $s : \calX^N \times \calX^M \to \IR$ between (private) databases of size $N$ and (synthetic) databases of size $M$, output a random (synthetic) database $R$ with probability proportional to $\exp( \frac{\varepsilon}{2 \Delta_1} s(D, R))$, where $D$ is the actual private database and $\Delta_1$ is the $L_1$ sensitivity of $s$ w.r.t.~$D$. This ensures $\varepsilon$-differential privacy~\cite{mcsherry_mechanism_2007}.
+
+To fit this into our framework, we can take $s(D, R) = - \| \mu_D - \mu_R \|_{\calH}$ to be the negative RKHS distance between the KMEs computed using $D$ and $R$, and achieve $\varepsilon$-differential privacy by releasing $R$ with probability proportional to $\exp( - \frac{\varepsilon}{2 \Delta_1} \| \mu_D - \mu_R \|_{\calH} )$. This solves steps 2 and 3 of our general algorithm template simultaneously, as it directly samples a concrete representation of a ``perturbed" KME $\mu_R$. The algorithm essentially corresponds to the SmallDB algorithm of~\citet{blum_learning_2008}, except for choosing the RKHS distance as a well-studied similarity measure between two databases.
+
+The principal issue with this algorithm is its computational infeasibility except in trivial cases, as it requires sampling from a probability distribution supported on all potential synthetic databases, and employing an approximate sampling scheme can break the differential privacy guarantee of the exponential mechanism. In Sections~\ref{sec:perturb_in_synthetic_subspace} and~\ref{sec:perturb_in_random_features_RKHS} respectively, we describe two concrete synthetic database release algorithms that may possess failure modes where they become inefficient, but employing approximations in those cases can only affect their statistical accuracy, not the promise of differential privacy.
+
+
+
+\begin{algorithm*}
+	\caption{Differentially private database release via a synthetic data subspace of the RKHS}
+	\label{alg:synthetic_subspace}
+	\begin{algorithmic}[1]
+		\REQUIRE database $D = \{ x_1, \ldots, x_N \} \subseteq \calX$, kernel $k$ on $\calX$, privacy parameters $\varepsilon > 0$ and $\delta > 0$
+		\ENSURE $(\varepsilon, \delta)$-differentially private, weighted synthetic database (representing an estimate of $\mu_X$ in the RKHS $\calH$ of $k$)
+		
+		\STATE $M \gets M(N) \in \omega(1) \cap o(N^2)$, number of synthetic data points to use
+		\STATE $z_1, \ldots, z_M \gets$ initialised deterministically or randomly from some distribution $q$ on $\calX$
+		\STATE $\calH_M \gets \operatorname{Span}(\{ k(z_1, \cdot), \ldots, k(z_M, \cdot) \}) \leq \calH$
+		\STATE $b_1, \ldots, b_F \gets$ orthonormal basis of $\calH_M$ (obtained using, e.g.~Gram-Schmidt)
+		\STATE $\hat{\mu}_X \gets \frac{1}{N} \sum_{n = 1}^N k(x_n, \cdot)$, empirical KME of $X$ in $\calH$
+		\STATE $\overline{\mu}_X \gets \sum_{f = 1}^F \langle b_f, \hat{\mu}_X \rangle_{\calH} b_f =: \sum_{f = 1}^F \alpha_f b_f$, projection of $\hat{\mu}_X$ onto $\calH_M$
+		\STATE $\boldsymbol{\beta} \gets \boldsymbol{\alpha} + \calN(0, \frac{8 \ln(1.25/\delta)}{N^2 \varepsilon^2} I_F)$, an $(\varepsilon, \delta)$-differentially private version of the coordinate vector $\boldsymbol{\alpha}$ (Gaussian mechanism)
+		\STATE $\tilde{\mu}_X \gets \sum_{f = 1}^F \beta_f b_f = \sum_{m = 1}^M w_m k(z_m, \cdot)$, re-expressed in terms of $k(z_m, \cdot)$'s \label{alg:synthetic_subspace:reexpress}
+		\STATE \textbf{return} $(z_1, w_1), \ldots, (z_M, w_M)$
+	\end{algorithmic}
+\end{algorithm*}
+
+
+
+\section{Perturbation in Synthetic-Data Subspace}
+\label{sec:perturb_in_synthetic_subspace}
+
+In this section we describe an instantiation of the framework proposed in Section~\ref{sec:framework} that achieves differential privacy of the KME by projecting it onto a finite-dimensional subspace of the RKHS spanned by feature maps $k(z_m, \cdot)$ of synthetic data points $z_1, \ldots, z_M$, and perturbing the resulting finite coordinate vector. To ensure differential privacy, the synthetic data points are chosen independently of the private database. As a result, statistical efficiency of this approach will depend on the choice of synthetic data points, with efficiency increasing if there are enough synthetic data points to capture the patterns in the private data. Therefore this algorithm is especially suited to the scenario discussed in Section~\ref{sec:introduction}, where a part of the database (or of a similar one) has already been published, as this can serve as a good starting set for the synthetic data points.
+
+The setting where some observations from $X$ have already been released highlights the fact that differential privacy only protects against \emph{additional} privacy violation due to an individual deciding to contribute to the private database; if a particular user's data has already been published, differential privacy does not protect against privacy violations based on exploiting this previously published data.
+
+The algorithm is formalised as Algorithm~\ref{alg:synthetic_subspace} above. Lines 1-2 choose synthetic data points $z_1, \ldots, z_M$ independently of the private data (only using the database size $N$). Lines 3-4 construct the linear subspace $\calH_M$ of $\calH$ spanned by feature maps of the chosen synthetic data points, and compute a (finite) basis for it. Only then the private data is accessed: the empirical KME $\hat{\mu}_X$ is computed (line 5), projected onto the subspace $\calH_M$ and expressed in terms of the precomputed basis (line 6). The basis coefficients of the projection are then perturbed to achieve differential privacy (line 7), and the perturbed element $\tilde{\mu}_X \in \calH_M$ is then re-expressed in terms of the spanning set containing feature maps of synthetic data points (line 8). This expansion is finally released to the public (line 9).
+
+Line 1 stipulates that the number of synthetic data points $M \to \infty$ as $N \to \infty$, but asymptotically slower than $N^2$. This is to ensure that the privatisation noise added in the subspace $\calH_M$ to each coordinate is small enough overall to preserve consistency, as stated in the following Theorem~\ref{thm:synthetic_subspace_consistency}. This theorem assures us that Algorithm~\ref{alg:synthetic_subspace} produces a consistent estimator of the true KME $\mu_X$, if the synthetic data points are sampled from a distribution with sufficiently large support. Due to space constraints, all proofs appear in Appendix~\ref{sec:app:proofs}.
+
+\begin{theorem}
+	\label{thm:synthetic_subspace_consistency}
+	Let $\calX$ be a compact metric space and $k$ a continuous kernel on $\calX$. If the synthetic data points $z_1, z_2, \ldots$ are sampled i.i.d.~from a distribution $q$ on $\calX$ such that the support of $X$ is included in the support of $q$, then Algorithm~\ref{alg:synthetic_subspace} outputs a consistent estimator of the KME $\mu_X$: $\sum_{m = 1}^M w_m k(z_m, \cdot) \stackrel{\IP}{\to} \mu_X$ as $N \to \infty$.
+\end{theorem}
+
+As discussed by~\citet{scibior_consistent_2016}, these assumptions are usually satisfied: $\calX$ can be taken to be compact whenever the data comes from measurements with any bounded range, and many kernels are continuous, including all kernels on discrete spaces (w.r.t.~to the discrete topology).
+
+In order to use the output of Algorithm~\ref{alg:synthetic_subspace} in the very general \emph{kernel probabilistic programming} framework and obtain a consistent estimator of the KME $\mu_{f(X)}$ of $f(X)$ for \emph{any} continuous function $f$, there is a technical condition that the $L_1$ norm $\sum_{m = 1}^M |w_m|$ of the released weights may need to remain bounded by a constant as $N \to \infty$~\cite{scibior_consistent_2016}. This is not enforced by Algorithm~\ref{alg:synthetic_subspace}, but Theorem~\ref{thm:synthetic_subspace_regularization_consistency} in Appendix~\ref{app:sec:synthetic_subspace_consistency} shows how a simple regularisation in the final stage of the algorithm achieves this without breaking consistency (or privacy).
+
+\begin{figure*}[!t]
+	\centering
+	\begin{subfigure}{.5\linewidth}
+		\includegraphics[width=0.95\linewidth]{../figures/leaksD2.pdf}
+	\end{subfigure}%
+	\begin{subfigure}{.5\linewidth}
+		\includegraphics[width=0.95\linewidth]{../figures/leaksD5.pdf}
+	\end{subfigure}
+	\vspace{-0.75em}
+	\caption{\small{RKHS distance (lower is better) to the (private) empirical KME $\hat{\mu}_X$ computed using the entire private database of size $N = 100,000$. The dimension of the database was $D = 2$ (left) or $D = 5$ (right); please see Appendix~\ref{app:sec:experiments} for further details of the setup. Horizontally we varied $M$, the number of publicly releasable data points. Stricter privacy requirements (lower $\varepsilon$) naturally lead to lower accuracy. Increasing $M$ does not always necessarily improve accuracy, since a new public data point always increases the total amount of privatising noise that needs to be added, but this might not be outweighed by its positive contribution towards covering relevant parts of the input space. In all cases, for sufficiently small $M$ Algorithm~\ref{alg:synthetic_subspace} provided a significantly more accurate estimate than $\mu^{\text{baseline}}$.}}
+	\label{fig:leaks}
+\end{figure*}
+
+The next result about Algorithm~\ref{alg:synthetic_subspace} shows that it is differentially private whenever $k(x, x) \leq 1$ for all $x \in \calX$. This is a weak assumption that holds for all normalised kernels, and can be achieved by simple rescaling for any bounded kernel (such that $\sup_{x \in \calX} k(x, x) < \infty$). When $\calX$ is a compact domain, all continuous kernels are bounded.
+
+\begin{proposition}
+	\label{prop:synthetic_subspace_privacy}
+	If $k(x, x) \leq 1$ for all $x \in \calX$, then Algorithm~\ref{alg:synthetic_subspace} is $(\varepsilon, \delta)$-differentially private.
+\end{proposition}
+
+\begin{remark}
+	\label{rem:privacy_params}
+	One usually requires that $\delta$ decreases faster than polynomially with the database size $N$~\cite{dwork_algorithmic_2014}. The proof of Theorem~\ref{thm:synthetic_subspace_consistency} remains valid whenever $M(N) \in o(N^2 / \ln(1.25 / \delta(N)))$, so for example we could have $\delta(N) = e^{-\sqrt{N}}$ and $M(N) \in o(N^{3/2})$.
+  \qed
+\end{remark}
+
+For a finite private database, actual performance will heavily depend on how the synthetic data points are chosen. We consider the following two extreme scenarios:
+\begin{enumerate}
+	\vspace{-0.5em}
+	\item \emph{No publishable subset}: No rows of the private database are, or can be made public unmodified.
+	\item \emph{Publishable subset}: A small proportion of the private database is already public, or can be made public.
+\end{enumerate}
+
+\begin{proposition}[Algorithm 1, No publishable subset]
+\label{prop:alg1_rate_no_publishable_subset}
+Say $\calX$ is a bounded subset of $\IR^D$, the kernel $k$ is Lipschitz, and the synthetic data points $z_1, z_2, \ldots$ are sampled i.i.d.~from a distribution $q$ with density bounded away from $0$ on any bounded subset of $\IR^D$. Then $M = M(N)$ can be chosen so that the output of Algorithm~\ref{alg:synthetic_subspace} converges to the true KME $\mu_X$ in RKHS norm at a rate $\calO_p(N^{-1/(D+1+c)})$, where $c$ is any fixed positive number $c > 0$.
+\end{proposition}
+
+Unsurprisingly, the convergence rate deteriorates with input dimension $D$, since without prior information about the private data manifold it is increasingly difficult for randomly sampled synthetic points to capture patterns in the private data. One of the main strengths of KMEs is that the empirical estimator converges to the true embedding at a rate $\calO_p(N^{-1/2})$ independently of the input dimension $D$, so we see that in this unfavourable scenario Algorithm~\ref{alg:synthetic_subspace} incurs a substantial privacy cost in high dimensions. On the other hand, if a small, but fixed proportion of the private database is publishable, then Algorithm~\ref{alg:synthetic_subspace} incurs no privacy cost in terms of the convergence rate:
+
+\begin{proposition}[Algorithm 1, Publishable subset]
+\label{prop:alg1_rate_publishable_subset}
+Say that a fixed proportion $\eta$ of the private database can be published unmodified. Using this part of the database as the synthetic data points, Algorithm~\ref{alg:synthetic_subspace} outputs a consistent estimator of $\mu_X$ that converges in RKHS norm at a rate $\calO_p(N^{-1/2})$.
+\end{proposition}
+
+Note that in this scenario the rate $\calO_p(N^{-1/2})$ can be also achieved by uniform weighting of the synthetic data points, since $\hat{\mu}^{\text{baseline}} := \frac{1}{M} \sum_{m = 1}^M k(z_m, \cdot)$ with $z_m = x_m$ is already a consistent estimator of $\mu_X$ (although based on a much smaller sample size $M = \eta N \ll N$). The purpose of Algorithm~\ref{alg:synthetic_subspace} is to find (generally non-uniform) $w_1, \ldots, w_M$ that reweight the public data points using the information in the large private dataset, but respecting differential privacy. Proposition~\ref{prop:alg1_rate_publishable_subset} confirmed theoretically that this does not hurt the convergence rate, while Figure~\ref{fig:leaks} shows empirically on two synthetic datasets of dimensions $D = 2$ and $D = 5$ that Algorithm~\ref{alg:synthetic_subspace} can in fact yield more accurate estimates of the KME than $\hat{\mu}^{\text{baseline}}$, especially when the proportion of public data points is small. This is encouraging, since obtaining permission to publish a larger subset of the private data unchanged will usually come at an increased cost. The ability to instead reweight a smaller public dataset in a differentially private manner using Algorithm~\ref{alg:synthetic_subspace} is therefore useful.
+
+
+
+\begin{algorithm*}
+	\caption{Differentially private database release via a random features RKHS}
+	\label{alg:random_features}
+	\begin{algorithmic}[1]
+		\REQUIRE database $D = \{ x_1, \ldots, x_N \} \subseteq \calX$, kernel $k$ on $\calX$, privacy parameters $\varepsilon > 0$ and $\delta > 0$
+		\ENSURE $(\varepsilon, \delta)$-differentially private, weighted synthetic database (representing an estimate of $\mu_X$ in the RKHS $\calH$ of $k$)
+
+		\STATE $J \gets J(N) \in \omega(1) \cap o(N^2)$, number of random features to use
+		\STATE $\phi \gets$ random feature map $\calX \mapsto \IR^J$ for kernel $k$ with $J$ features
+		\STATE $\hat{\mu}^{\phi}_X \gets \frac{1}{N} \sum_{n = 1}^N \phi(x_n) \in \IR^J$, empirical KME of $X$ in RKHS $\calH_{\phi}$ of the random features kernel $k_{\phi}(\cdot, \cdot) := \phi(\cdot)^T \phi(\cdot)$
+		\STATE $\tilde{\mu}^{\phi}_X \gets \hat{\mu}^{\phi}_X + \calN(0, \frac{8 \ln(1.25 / \delta)}{N^2 \varepsilon^2} I_J)$, an $(\varepsilon, \delta)$-differentially private version of the vector $\hat{\mu}^{\phi}_X$ (Gaussian mechanism)
+		\STATE $M \gets M(N) \geq N$, number of synthetic expansion points to use for representing $\tilde{\mu}^{\phi}_X$
+		\STATE $(z_1, w_1), \ldots, (z_M, w_M) \gets$ approximate $\tilde{\mu}^{\phi}_X$ in the RKHS $\calH_{\phi}$ using a Reduced set method:
+		\vspace{-0.5em}
+		\begin{equation}
+		(z_1, w_1), \ldots, (z_M, w_M)
+		\approx
+		\argmin_{\substack{(z'_1, w'_1), \ldots, (z'_M, w'_M)\text{ s.t. } \sum_m |w'_m| \leq 1}}
+		\left\|
+		\sum_{m = 1}^M w'_m \phi(z'_m) - \tilde{\mu}^{\phi}_X
+		\right\|_{\calH_{\phi}}
+		\label{eq:random_features_preimage_minimisation}
+		\end{equation}
+		\vspace{-1em}
+		\STATE \textbf{return} $(z_1, w_1), \ldots, (z_M, w_M)$
+	\end{algorithmic}
+\end{algorithm*}
+
+
+
+\section{Perturbation in Random-Features RKHS}
+\label{sec:perturb_in_random_features_RKHS}
+
+Another approach to ensuring differential privacy is to map the potentially infinite dimensional RKHS $\calH$ of $k$ into a different, finite-dimensional RKHS $\calH_{\phi}$ using random features~\cite{rahimi_random_2007}, privacy-protect the finite coordinate vector in this space~\cite{chaudhuri_differentially_2011}, and then employ a reduced set method to find an expansion of the resulting RKHS element in terms of synthetic data points. In contrast to Algorithm~\ref{alg:synthetic_subspace}, both the weights and locations of synthetic data points can be optimised here.
+
+The algorithm is formalised as Algorithm~\ref{alg:random_features} above. Lines 1-2 pick the number $J = J(N)$ of random features to use, and construct a random feature map $\phi$ with that many features. Lines 3-4 compute the empirical KME of $X$ in the RKHS $\calH_{\phi}$ corresponding to the kernel induced by the random features, and then privacy-protect the resulting finite, real-valued vector. Lines 5-6 run a blindly initialised Reduced set method to find a weighted synthetic dataset whose KME in $\calH_{\phi}$ is close to the privacy-protected KME of the private database. Line 7 releases this weighted dataset to the public.
+
+The following theorem confirms that Algorithm~\ref{alg:random_features} outputs a consistent estimator of the true KME $\mu_X$, provided that the optimisation problem (\ref{eq:random_features_preimage_minimisation}) is solved exactly, and the random features converge to the kernel $k$ uniformly on $\calX$. On compact sets $\calX$ this requirement is satisfied by general schemes such as \emph{random Fourier features} and \emph{random binning} for shift-invariant kernels~\citep{rahimi_random_2007}, or by random features for dot product kernels~\cite{kar_dot_2012}.
+
+\begin{theorem}
+	\label{thm:random_features_consistency}
+	If $\phi(\cdot)^T \phi(\cdot) \to k(\cdot, \cdot)$ converges uniformly in $\calX \times \calX$ as $J \to \infty$, then the output of Algorithm~\ref{alg:random_features} is a consistent estimator of the true KME $\mu_X$ as $N \to \infty$.
+\end{theorem}
+
+Moreover, a uniform convergence rate for the random features, such as the one for random Fourier features by~\citet{sriperumbudur_optimal_2015}, can be used to derive a convergence rate for the output of Algorithm~\ref{alg:random_features}:
+
+\begin{proposition}
+If $\phi(\cdot)^T \phi(\cdot) \to k(\cdot, \cdot)$ converges uniformly in $\calX \times \calX$ at a rate $\calO_p(J^{-1/2})$ as $J \to \infty$, then $J = J(N)$ can be chosen so that the output of Algorithm~\ref{alg:random_features} converges to the true KME $\mu_X$ at a rate $\calO_p(N^{-1/3})$.
+\end{proposition}
+
+The empirical KME of the private database $\hat{\mu}_X$ converges at a rate $\calO_p(N^{-1/2})$, so we see that under perfect optimisation, the privacy cost incurred by Algorithm~\ref{alg:random_features} is a factor of $N^{1/6}$. In practice performance will also depend on the Reduced set method used, and the computational budget allocated to it. Figure~\ref{fig:nodata} shows how the incurred error (in terms of RKHS distance) varies with the number of synthetic data points $M$. The additional ability of Algorithm~\ref{alg:random_features} to optimise the \emph{locations} of the synthetic data points (rather than just the weights, as in Algorithm~\ref{alg:synthetic_subspace}) seems to be more helpful in the higher-dimensional case $D = 5$, where the randomly sampled synthetic data points are less likely to land close to private data points.
+
+\begin{proposition}
+	\label{prop:random_features_privacy}
+	If $\| \phi(x) \|_2 \leq 1$ for all $x \in \calX$, then Algorithm~\ref{alg:random_features} is $(\varepsilon, \delta)$-differentially private.
+\end{proposition}
+
+This $L_2$-boundedness requirement on the random feature vectors $\phi(x)$ is reasonable under the weak assumption $k(x, x) \leq 1$ for all $x \in \calX$ discussed in Section~\ref{sec:perturb_in_synthetic_subspace}, as in that case $\| \phi(x) \|_2^2 = \phi(x)^T \phi(x) \approx k(x, x) \leq 1$.
+
+\begin{figure*}[!t]
+	\centering
+	\begin{subfigure}{.5\linewidth}
+		\includegraphics[width=0.92\linewidth]{../figures/nodataD2.pdf}
+	\end{subfigure}%
+	\begin{subfigure}{.5\linewidth}
+		\includegraphics[width=0.92\linewidth]{../figures/nodataD5.pdf}
+	\end{subfigure}
+	\vspace{-0.75em}
+	\caption{\small{RKHS distance (lower is better) to the (private) empirical KME $\hat{\mu}_X$ computed using the same databases as in Figure~\ref{fig:leaks}, of dimensions $D = 2$ (left) and $D = 5$ (right), but this time without a publishable subset. The synthetic data points for Algorithm 1 were therefore sampled from a wide Gaussian distribution; please see Appendix~\ref{app:sec:experiments} for further details. Algorithm~\ref{alg:random_features} is capable of outperforming Algorithm~\ref{alg:synthetic_subspace} thanks to its ability to optimise the synthetic data point locations, but this depends on the precise optimisation procedure used and the optimisation problem becomes harder in higher dimensions.}}
+	\label{fig:nodata}
+\end{figure*}
+
+
+
+\section{Related Work}
+\label{sec:related_work}
+
+Synthetic database release algorithms with a differential privacy guarantee have been studied in the literature before. \citet{machanavajjhala2008privacy} analyzed such a procedure for count data, ensuring privacy by sampling a distribution and then synthetic counts from a Dirichlet-Multinomial posterior. \citet{blum_learning_2008} studied the exponential mechanism applied to synthetic database generation, which leads to a very general, but unfortunately inefficient algorithm (see also Section~\ref{sec:framework:concrete}). \citet{wasserman_statistical_2008} provided a theoretical comparison of this algorithm to sampling synthetic databases from deterministically smoothed, or randomly perturbed histograms. Unlike our approach, these algorithms achieve differential privacy by sampling synthetic data points from a specific distribution, where resorting to approximate sampling can break the privacy guarantee. In our framework we propose to arrive at the synthetic database using a reduced set method, where poor performance could affect statistical usefulness of the synthetic database, but cannot break its differential privacy.
+
+\citet{zhou_differential_2009} and \citet{kenthapadi_privacy_2012} proposed randomised database compression schemes that yield synthetic databases useful for particular types of algorithms, while guaranteeing differential privacy. The former compresses the number of data points using a random linear or affine transformation of the entire database, and the result can be used by procedures that rely on the empirical covariance of the original data. The latter compresses the number of data point dimensions while approximately preserving distances between original, private data points.
+
+Differentially private learning in a RKHS has also been studied, with~\citet{chaudhuri_differentially_2011} and \citet{rubinstein_svm_2012} having independently presented release mechanisms for the result of an empirical risk minimisation procedure (such as a SVM). Similarly to our Algorithm~\ref{alg:random_features}, they map data points into a finite-dimensional space defined by random features and carry out the privacy-protecting perturbation there. However, they do not require the final stage of invoking a Reduced set method to construct a synthetic database, because the output (such as a trained SVM) is only used for evaluation on test points, for which it suffices to additionally release the used random feature map $\phi$.
+
+As our framework stipulates privacy-protecting an empirical KME, which is a function $\calX \to \IR$, the work on differential privacy for functional data is of relevance. \citet{hall_differential_2013} showed how an RKHS element can be made differentially private via pointwise addition of a Gaussian process sample path, but as discussed in Section~\ref{sec:framework:template}, the resulting function is no longer an element of the RKHS. Recently,~\citet{alda_bernstein_2017} proposed a general Bernstein mechanism for $\varepsilon$-differentially private function release. The released function can be evaluated pointwise arbitrarily many times, but again, the geometry of the RKHS to which the unperturbed function belonged cannot be easily exploited anymore.
+
+
+
+\section{Discussion}
+\label{sec:discussion}
+
+We proposed a framework for constructing differentially private synthetic database release algorithms, based on the idea of using KMEs in RKHS as intermediate database representations.
+To justify our framework, we presented two concrete algorithms and proved theoretical results guaranteeing their consistency and differential privacy.
+We also studied their finite-sample convergence rates, and provided empirical illustrations of their performance on synthetic datasets.
+We believe that exploring other instantiations of this framework, and comparing them theoretically and empirically, can be a fruitful direction for future research.
+
+The i.i.d.~assumption on database rows can be relaxed. For example, if they are identically distributed (as a random variable $X$), but not necessarily independent, the framework remains valid as long as a consistent estimator of the KME $\mu_X$ can be constructed from the database rows. A common situation where this arises is, for example, duplication of database rows due to user error.
+
+
+
+\section*{Acknowledgements}
+The authors would like to thank Bharath Sriperumbudur and the anonymous reviewers for helpful feedback.
+
+\begin{small}
+\bibliography{RKHS-private-database}
+\bibliographystyle{icml2018}
+\end{small}
+
+\clearpage
+\newpage
+\onecolumn
+\appendix
+
+\input{appendix}
+
+\end{document}
+
+% This document was modified from the file originally made available by
+% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
+% by Iain Murray in 2018. It was modified from a version from Dan Roy in
+% 2017, which was based on a version from Lise Getoor and Tobias
+% Scheffer, which was slightly modified from the 2010 version by
+% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
+% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
+% slightly modified from Prasad Tadepalli's 2007 version which is a
+% lightly changed version of the previous year's version by Andrew
+% Moore, which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.
